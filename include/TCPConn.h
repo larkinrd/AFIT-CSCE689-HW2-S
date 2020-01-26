@@ -37,20 +37,12 @@ public:
    const char *getUsernameStr() { return _username.c_str(); };
 
 private:
-
-
    enum statustype { s_username, s_changepwd, s_confirmpwd, s_passwd, s_menu };
-
    statustype _status = s_username;
-
    SocketFD _connfd;
- 
    std::string _username; // The username this connection is associated with
-
    std::string _inputbuf;
-
    std::string _newpwd; // Used to store user input for changing passwords
-
    int _pwd_attempts = 0;
 };
 

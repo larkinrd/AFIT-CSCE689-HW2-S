@@ -9,6 +9,7 @@
 const unsigned int stdin_bufsize = 50;
 const unsigned int socket_bufsize = 100;
 
+//TCPClient is the subclass and inherits : from parent class Client
 class TCPClient : public Client
 {
 public:
