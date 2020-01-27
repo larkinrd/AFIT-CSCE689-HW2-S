@@ -8,8 +8,10 @@
             "name": "gcc build and debug active file",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/media/new4tbhd/defaultsync/CSCE689/AFIT-CSCE689-HW2-S/src/tcpserver",
-            "args": ["-a 127.0.0.1", "-p 1111"],
+            //"program": "/media/new4tbhd/defaultsync/CSCE689/AFIT-CSCE689-HW2-S/src/tcpserver", //for tcpserver
+            //"args": ["-a 127.0.0.1", "-p 1111"], //for tcpserver
+            "program": "/media/new4tbhd/defaultsync/CSCE689/AFIT-CSCE689-HW2-S/src/my_adduser", //for my_adduser
+            "args": ["bob"], //for my_adduser
             "stopAtEntry": false,
             "cwd": "/",
             "environment": [],

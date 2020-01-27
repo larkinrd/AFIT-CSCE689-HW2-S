@@ -35,6 +35,7 @@ public:
    unsigned long getIPAddr() { return _connfd.getIPAddr(); };
    void getIPAddrStr(std::string &buf);
    const char *getUsernameStr() { return _username.c_str(); };
+   void displayCountdown ();
 
 private:
    enum statustype { s_username, s_changepwd, s_confirmpwd, s_passwd, s_menu };

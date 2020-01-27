@@ -6,6 +6,9 @@
 #include <iostream>
 #include "TCPConn.h"
 #include "strfuncts.h"
+//LARKIN ADDITIONS
+#include <thread>
+#include <chrono>
 
 // The filename/path of the password file
 const char pwdfilename[] = "passwd";
@@ -61,8 +64,16 @@ void TCPConn::startAuthentication() {
 
    // Skipping this for now
    _status = s_username;
+   std::cout << "TO SERVER: Inside TCPConn::startAuthentication and looping inside \n";
+   
+   _connfd.writeFD("Username: ");
 
-   _connfd.writeFD("Username: "); 
+   //THIS FUNCTION ONLY *STARTS* Authentication... it does not end it.. don't use code belo
+   //if(_status == s_passwd){
+   //   _connfd.writeFD("Enter password:");
+   //} 
+
+   
 }
 
 /**********************************************************************************************
@@ -87,17 +98,19 @@ void TCPConn::handleConnection() {
          case s_passwd:
             getPasswd();
             break;
+
+         case s_menu:
+            getMenuChoice();
+            break;
    
-         case s_changepwd:
+         //IS THIS CALLING THE SAME PROCESS/FUNCTIONS TWICE SO USER ENTERS *NEW* PASSWORD TWICE
+         //BEFORE WRITING TO THE PASSWORD FILE
+         case s_changepwd: 
          case s_confirmpwd:
             changePassword();
             break;
 
-         case s_menu:
-            getMenuChoice();
-
-            break;
-
+         
          default:
             throw std::runtime_error("Invalid connection status!");
             break;
@@ -120,6 +133,25 @@ void TCPConn::handleConnection() {
 
 void TCPConn::getUsername() {
    // Insert your mind-blowing code here
+   /* LARKIN - How do we find userdata?*/
+   
+   //STEP0: Hardcode username variable
+   //_username = "bobby";
+   //std::cout << "I'm in TCPConn::getUsername() and _username is:" << _username << "\n";
+   //std::cout << "I'm in TCPConn::getUsername() and _inputbuf has:" << _inputbuf << "\n";
+   
+   //STEP1: Get the user input after they pass back a username
+   if (_connfd.hasData()) {
+   _connfd.readFD(_username);
+   std::cout << "_username entered was:" << _username << "\n";
+   
+   //STEP2: Check the username against the database file 'passwd' NOT PROGRAMMED YET
+   // USE PasswdMgr::checkUser() to do this
+
+   //STEP3: IF Good username update status, prompt for password, ELSE disconnect client
+   _status = s_passwd;
+   _connfd.writeFD("Enter password: ");
+   }
 }
 
 /**********************************************************************************************
@@ -132,6 +164,34 @@ void TCPConn::getUsername() {
 
 void TCPConn::getPasswd() {
    // Insert your astounding code here
+   
+   //STEP0: Hardcode passwd variable
+   //SKIPPING THIS
+   
+   //STEP1: Get the user password
+   if (_connfd.hasData()) {
+   //THERE IS NO _passwd private variable, but there is an inputbuf that I can use. Is this INSECURE?
+   //created this... but prob dont need it
+   //    std::string tempPasswd;
+   //    _connfd.readFD(tempPasswd);
+   //    std::cout << "passwd entered was:" << tempPasswd << "\n";
+   
+   _connfd.readFD(_inputbuf);
+   std::cout << "passwd entered was:" << _inputbuf << " and is stored in _inputbuf\n";
+   
+   std::cout << "\nHalting progrmain in <TCPConn::getPasswd()>\n"
+      "Prior to this you should have checked\n"
+      "1. Was the username valid\n"
+      "2. Is their password correct\n"
+      "Press a key on tcpserver to display the menu to tcpclient\n";
+   getchar();
+   
+   //STEP3: IF user authenticates, send the menu, set status to menu, ELSE disconnect
+   _status = s_menu;
+   sendMenu();
+   }
+   //std::cout << "looping inside getPassword()\n";
+
 }
 
 /**********************************************************************************************
@@ -221,7 +281,9 @@ void TCPConn::getMenuChoice() {
    } else if (cmd.compare("3") == 0) {
       _connfd.writeFD("That seems like a terrible idea.\n");
    } else if (cmd.compare("4") == 0) {
-
+      _connfd.writeFD("Why was this left blank Robert asks?");
+      displayCountdown();
+      sendMenu();
    } else if (cmd.compare("5") == 0) {
       _connfd.writeFD("I'm singing, I'm in a computer and I'm siiiingiiiing! I'm in a\n");
       _connfd.writeFD("computer and I'm siiiiiiinnnggiiinnggg!\n");
@@ -232,6 +294,18 @@ void TCPConn::getMenuChoice() {
       _connfd.writeFD(msg);
    }
 
+}
+
+void TCPConn::displayCountdown () {
+      std::cout << "countdown:\n";
+      _connfd.writeFD("countdown\n");
+      for (int i=5; i>0; --i) {
+         std::cout << i << "..";
+         _connfd.writeFD("..");
+         std::this_thread::sleep_for (std::chrono::seconds(1));
+      }
+      std::cout << "\nEnd displayCountdown() send menu to client\n";
+      _connfd.writeFD("End displayCountdown() receive menu from server\n");
 }
 
 /**********************************************************************************************

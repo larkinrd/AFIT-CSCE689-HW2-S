@@ -12,8 +12,11 @@
 const int hashlen = 32;
 const int saltlen = 16;
 
+//The PasswdMgr constructor accepts a password file name and save it
+// to the PasswdMgr classes private variable _pwd_file
 PasswdMgr::PasswdMgr(const char *pwd_file):_pwd_file(pwd_file) {
-
+   std::cout << "PasswdMgr Constructor called, _pwd_file variable is: " << _pwd_file << "\n";
+   std::cout << "PasswdMgr Constructor called, pwd_file argument is: " << pwd_file << "\n";
 }
 
 
@@ -29,10 +32,12 @@ PasswdMgr::~PasswdMgr() {
  *******************************************************************************************/
 
 bool PasswdMgr::checkUser(const char *name) {
+   //uses standard template library, a vector of unsigned 8 bit integers to store single chars
+   // we have two variables to use at our disposal, first is passwd and second is salt
    std::vector<uint8_t> passwd, salt;
-
+      std::cout << "executed inside checkUser()\n";
    bool result = findUser(name, passwd, salt);
-
+      std::cout << "executed after findUser (name, passwd, salt)\n";
    return result;
      
 }
@@ -149,11 +154,29 @@ bool PasswdMgr::findUser(const char *name, std::vector<uint8_t> &hash, std::vect
    FileFD pwfile(_pwd_file.c_str());
 
    // You may need to change this code for your specific implementation
+   std::cout << "Am I in findUser()\n";
 
    if (!pwfile.openFile(FileFD::readfd))
       throw pwfile_error("Could not open passwd file for reading");
 
    // Password file should be in the format username\n{32 byte hash}{16 byte salt}\n
+   // Using https://antelle.net/argon2-browser/ because I have not writing my code yet
+   // Generated username/pwd with the following
+   //  username = bob, password = bob, salt = thisismysaltof16
+   //  memory = 1024 Kib, Iterations = 1, Hash length = 32, parallelism = 1, type - Argon2d
+   /********  RESULTS ARE ******
+    * [00.001] Testing Argon2 using Binaryen native-wasm
+    * [00.001] Memory: 512 pages (32768 KB)
+    * [00.004] Loading wasm...
+    * [00.285] Wasm loaded, loading script...
+    * [00.476] Script loaded in 191ms
+    * [00.476] Calculating hash...
+    * [00.486] Running...
+    * [00.492] Params: pass=bob, salt=thisismysaltof16, time=1, mem=1024, hashLen=32, parallelism=1, type=0
+    * [00.503] Encoded: $argon2d$v=19$m=1024,t=1,p=1$dGhpc2lzbXlzYWx0b2YxNg$mstW02XGT3/YAYvAhNN/TLxw4ZIhyNNk+yBndXVmdSI
+    * [00.503] Hash: 9acb56d365c64f7fd8018bc084d37f4cbc70e19221c8d364fb20677575667522
+    * [00.503] Elapsed: 10ms
+   ************ END RESULTS FROM WEBSITE ********/
    bool eof = false;
    while (!eof) {
       std::string uname;

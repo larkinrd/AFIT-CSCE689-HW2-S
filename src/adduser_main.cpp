@@ -33,10 +33,12 @@ int main(int argc, char *argv[]) {
    }
 
    // Read in the username to add to the password file
-   std::string username(argv[1]);
+   std::string username(argv[1]); //WHY IS THIS CHAR** WITH TWO STARS?
 
    // Check if the user already exists
    std::vector<uint8_t> hash, salt;
+
+   //NOTE: Thank you jose... created a passwd file with 'touch passwd'
    PasswdMgr pwm("passwd");
    
    if (pwm.checkUser(username.c_str()))
@@ -44,6 +46,8 @@ int main(int argc, char *argv[]) {
       cerr << "That user already has an account.\n";
       exit(-1); 
    }
+
+   std::cout << "Are we here in the code\n";
 
    TermFD stdinFD;
 

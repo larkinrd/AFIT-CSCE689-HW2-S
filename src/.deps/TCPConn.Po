@@ -127,7 +127,22 @@ TCPConn.o: TCPConn.cpp /usr/include/stdc-predef.h \
  /usr/include/c++/6/bits/stl_uninitialized.h \
  /usr/include/c++/6/bits/stl_vector.h \
  /usr/include/c++/6/bits/stl_bvector.h /usr/include/c++/6/bits/vector.tcc \
- ../include/exceptions.h ../include/strfuncts.h
+ ../include/exceptions.h ../include/strfuncts.h /usr/include/c++/6/thread \
+ /usr/include/c++/6/chrono /usr/include/c++/6/ratio \
+ /usr/include/c++/6/ctime /usr/include/c++/6/bits/parse_numbers.h \
+ /usr/include/c++/6/functional /usr/include/c++/6/typeinfo \
+ /usr/include/c++/6/tuple /usr/include/c++/6/array \
+ /usr/include/c++/6/bits/uses_allocator.h /usr/include/c++/6/memory \
+ /usr/include/c++/6/bits/stl_raw_storage_iter.h \
+ /usr/include/c++/6/ext/concurrence.h \
+ /usr/include/c++/6/bits/unique_ptr.h \
+ /usr/include/c++/6/bits/shared_ptr.h \
+ /usr/include/c++/6/bits/shared_ptr_base.h \
+ /usr/include/c++/6/bits/allocated_ptr.h \
+ /usr/include/c++/6/ext/aligned_buffer.h \
+ /usr/include/c++/6/bits/shared_ptr_atomic.h \
+ /usr/include/c++/6/bits/atomic_base.h \
+ /usr/include/c++/6/backward/auto_ptr.h
 
 /usr/include/stdc-predef.h:
 
@@ -478,3 +493,45 @@ TCPConn.o: TCPConn.cpp /usr/include/stdc-predef.h \
 ../include/exceptions.h:
 
 ../include/strfuncts.h:
+
+/usr/include/c++/6/thread:
+
+/usr/include/c++/6/chrono:
+
+/usr/include/c++/6/ratio:
+
+/usr/include/c++/6/ctime:
+
+/usr/include/c++/6/bits/parse_numbers.h:
+
+/usr/include/c++/6/functional:
+
+/usr/include/c++/6/typeinfo:
+
+/usr/include/c++/6/tuple:
+
+/usr/include/c++/6/array:
+
+/usr/include/c++/6/bits/uses_allocator.h:
+
+/usr/include/c++/6/memory:
+
+/usr/include/c++/6/bits/stl_raw_storage_iter.h:
+
+/usr/include/c++/6/ext/concurrence.h:
+
+/usr/include/c++/6/bits/unique_ptr.h:
+
+/usr/include/c++/6/bits/shared_ptr.h:
+
+/usr/include/c++/6/bits/shared_ptr_base.h:
+
+/usr/include/c++/6/bits/allocated_ptr.h:
+
+/usr/include/c++/6/ext/aligned_buffer.h:
+
+/usr/include/c++/6/bits/shared_ptr_atomic.h:
+
+/usr/include/c++/6/bits/atomic_base.h:
+
+/usr/include/c++/6/backward/auto_ptr.h:

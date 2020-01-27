@@ -237,6 +237,7 @@ void TCPServer::listenSvr() {
          new_conn->sendText("Welcome to the CSCE 689 Server!\n");
          
          // Change this later
+         //We have a valid connection on our whitelist, so begin authentication
          new_conn->startAuthentication();
       }
 
@@ -256,6 +257,8 @@ void TCPServer::listenSvr() {
 
          // Process any user inputs
          (*tptr)->handleConnection();
+         
+         //std::cout << "Looping over connections\n";
 
          // Increment our iterator
          tptr++;
