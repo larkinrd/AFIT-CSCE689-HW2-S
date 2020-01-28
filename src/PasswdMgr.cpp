@@ -43,24 +43,26 @@ bool PasswdMgr::checkUser(const char *name) {
    // we have two variables to use at our disposal, first is passwd and second is salt
    std::cout << "Enter checkUser() and DO SOMETHING\n"; 
    
+   bool result = false; 
    std::vector<uint8_t> passwd, salt; //just contain garbage right now
    
    /************************
    //PROGRAM THIS AFTER WE ADD A USER INTO OUR FILE SUCCESSFULLY
    *************************/
 
-   /*
-   if( findUser(name, passwd, salt) == 0) {
+   
+   if( findUser(name, passwd, salt) == 1) {
       std::cout << "Found user return true\n";
-      return true;
-   }*/
+      result = true;
+      //return true;
+   }
 
    std::cout << "Press Enter Key to Exit checkUser()\n\n";
    getchar();    
    
    //else return false, did not find user
-   return false; //UMMM was 'return result' the original code?
-   //return result;  
+   //return false; //UMMM was 'return result' the original code?
+   return result;  
 }
 
 /*******************************************************************************************
@@ -139,11 +141,45 @@ bool PasswdMgr::readUser(FileFD &pwfile, std::string &name, std::vector<uint8_t>
    // Insert your perfect code here!
    std::cout << "Enter readUser() and DO SOMETHING\n"; 
 
-   //STEP 1: LOOP over the password file and print it to the screen
+   //STEP 0: Knowing this function gets called in a loop, we need to return one SET of uname, salt, hash
+   //STEP 1: Read in one username, salt, and password
+   //pwfile.openFile(FileFD::readfd);
+   // CHECK FOR END OF FILE, readStr() returns zero if no bytes read 
+
+   int bytesread = 0;
+   bytesread = pwfile.readStr(name);
+   if (bytesread == 0 ) {
+      return false; //we've reached the end of the passwd file
+      //std::cout << "print this" << std::endl;
+
+   }
+   std::cout << "username read from passwd file is: " << name << std::endl; //Does readStr() get the newline?
    
+   
+   //READ THE SALT, STORE IN Salt Memory location passed to this function
+   bytesread = pwfile.readBytes<uint8_t>(salt, 16);
+
+   //PRINT  THE SALT TO SCREEN   
+   for (unsigned int i=0; i<salt.size(); i++) {
+      std::cout << "," << (int) salt[i];
+   }
+   //std::cout << "\n";
+   //bytesread = pwfile.readBytes<uint8_t>(salt);
+   std::cout << "bytesread var for salt is: " << bytesread << std::endl;
+   
+   
+   //READ THE PASSWORD HASH AND PRINT TO SCREEN
+   bytesread = pwfile.readBytes<uint8_t>(hash, 32);
+   for (unsigned int i=0; i<hash.size(); i++) {
+      std::cout << "," << (int) hash[i];
+   }
+   std::cout << "bytes read var for hash is: " << bytesread << std::endl;
+  // std::cout << "\n";
+
+   uint8_t togetnewline;
+   pwfile.readByte(togetnewline);
    // I NEED if(!pwfile.readbytes<uint8_t>(hash, 32) < 0)
    //print out what was passed
-
    
    std::cout << "Press Enter Key to Exit readUser()\n\n";
    getchar();
@@ -173,7 +209,7 @@ int PasswdMgr::writeUser(FileFD &pwfile, std::string &name, std::vector<uint8_t>
    //ssize_t FileDesc::writeByte(unsigned char data) {return write(_fd, &data, 1);}
 
    //ssize_t FileDesc::writeFD(const char *data) {
-   pwfile.writeFD(name);
+   //pwfile.writeFD(name);
    //pwfile.writeBytes();
 
    std::cout << "Press Enter Key to Exit writeUser()\n\n";
@@ -198,10 +234,13 @@ int PasswdMgr::writeUser(FileFD &pwfile, std::string &name, std::vector<uint8_t>
 bool PasswdMgr::findUser(const char *name, std::vector<uint8_t> &hash, std::vector<uint8_t> &salt) {
    std::cout << "Enter findUser() and DO SOMETHING\n"; 
 
+   bool results = false; //initialize to false... we have an unknown user
+
+
    //print out args passed to function
    std::cout << "name: " << name << std::endl;
-   std::cout << "hash: " << &hash << std::endl;
-   std::cout << "salt: " << &salt << std::endl;
+   //std::cout << "hash: " << hash << std::endl;
+   //std::cout << "salt: " << salt << std::endl;
 
    //REMEMBER: findUser will get called first and this FileFD will get created... but as a local variable
    FileFD pwfile(_pwd_file.c_str());
@@ -211,28 +250,39 @@ bool PasswdMgr::findUser(const char *name, std::vector<uint8_t> &hash, std::vect
       throw pwfile_error("Could not open passwd file for reading");
 
    //open the password file and loop over all users
+   //pwfile.openFile(FileFD::readfd);
    bool eof = false;
    while (!eof) {
       std::string uname;
 
+      //if (readUser(pwfile, uname, hash, salt)==true){
+         // A user, salt, password has been returned and weve NOT reached end of file
+      //   std::cout << "name is :" << name << " and uname is: " << uname << "\n";
+      
       if (!readUser(pwfile, uname, hash, salt)) {
          eof = true;
          continue;
       }
-
       if (!uname.compare(name)) {
+         std::cout << "Executed the Compare Function" << std::endl;
+         results = true;
          pwfile.closeFD();
-         return true;
+         break; // if we found a user, break out of the while loop so that
+         // the username, salt, and hash are in the current variables/registers
+         //return true;
       }
+      
    }
 
+   //why am I clearing all of these... don't I want to save them for passwd checking???
+   //also, if craeting a new user... these are going to get overwritten anyhow...
    hash.clear();
    salt.clear();
    pwfile.closeFD();
    
    std::cout << "Press Enter Key to Exit findUser()\n\n";
    getchar();
-   return false;
+   return results;
 }
 
 
@@ -260,23 +310,23 @@ void PasswdMgr::hashArgon2(std::vector<uint8_t> &ret_hash, std::vector<uint8_t> 
    //std::cout << in_salt << "\n";   // this was null for initial add user
    
    // the argon2 wants a uint8_t array and NOT a vector
-   uint8_t uintpasswd[strlen(in_passwd)]; 
-   std::cout << "Priting out uintpassword: ";
-   for (int i = 0; i < strlen(in_passwd); i++){
-      uintpasswd[i] = in_passwd[i];
-      std::cout << uintpasswd[i] << ".";
-   }
-   std::cout << std::endl;
-   std::cout << "sizeof(uintpasswd) is: " << sizeof(uintpasswd) << std::endl;
+   //uint8_t uintpasswd[strlen(in_passwd)]; 
+   //std::cout << "Priting out uintpassword: ";
+   //for (int i = 0; i < strlen(in_passwd); i++){
+   //   uintpasswd[i] = in_passwd[i];
+   //   std::cout << uintpasswd[i] << ".";
+   //}
+   //std::cout << std::endl;
+   //std::cout << "sizeof(uintpasswd) is: " << sizeof(uintpasswd) << std::endl;
    //std::cout << "strlen(uintpasswd) is: " << strlen(uintpasswd);
    
    uint8_t uinthash[32]; 
-   std::cout << "Priting out uinthash: ";
-   for (int i = 0; i < 32; i++){
-      uinthash[i] = ret_hash[i];
-      std::cout << uinthash[i] << ".";
-   }
-   std::cout << std::endl;
+   //std::cout << "Priting out uinthash: ";
+   //for (int i = 0; i < 32; i++){
+   //   uinthash[i] = ret_hash[i];
+   //   std::cout << uinthash[i] << ".";
+   //}
+   //std::cout << std::endl;
 
    uint8_t uintsalt[16]; 
    std::cout << "Priting out uintsalt: ";
@@ -300,7 +350,7 @@ void PasswdMgr::hashArgon2(std::vector<uint8_t> &ret_hash, std::vector<uint8_t> 
    //IN THIS FUNCTION... returnhash is blank with a size of 1000
    
    //THIS PROCESSES PROCESS MODIFIES uinthash which can be copied back over into ret_hash
-   argon2i_hash_raw(1, (1<<10), 1, uintpasswd, sizeof(uintpasswd), uintsalt, 16, uinthash, 32);
+   argon2i_hash_raw(1, (1<<10), 1, (uint8_t *)in_passwd, strlen(in_passwd), uintsalt, 16, uinthash, 32);
    
    //FIRST TRY AND DID NOT WORK RIGHT
    //argon2i_hash_raw(1, (1<<10), 1, uintpasswd, strlen(in_passwd), &ret_salt, ret_salt.size(), &ret_hash, ret_hash.size());
@@ -393,15 +443,45 @@ void PasswdMgr::addUser(const char *name, const char *passwd) {
    FileFD pwfile(_pwd_file.c_str());
 
    // You may need to change this code for your specific implementation
-   if (!pwfile.openFile(FileFD::readfd))
-      throw pwfile_error("Could not open passwd file for reading");
+   if (!pwfile.openFile(FileFD::writefd))
+      throw pwfile_error("Could not open passwd file for writing");
 
-   std::cout << "NO error means pwfile file descriptor was opened successfully???";
-   std::string newname (name); //WHY NOT JUST ACCEPT A CONST CHAR IN writeUser()...
-   pwfile.writeFD(newname);
+   //std::cout << "NO error means pwfile file descriptor was opened successfully???";
+   //PASSWD FILE FORMAT IS 
+   // username\n
+   // saltpasswd\n
    
-   writeUser(pwfile, newname, bobhash, bobsalt);
-
+   
+   std::string newname (name); //WHY NOT JUST ACCEPT A CONST CHAR IN writeUser()...
+   pwfile.openFile(FileFD::appendfd); //open file for appending
+   
+   //WRITE THE USERNAME
+   pwfile.writeFD(newname);
+   pwfile.writeFD("\n"); // append newline to end of username
+   
+   //WRITE THE SALT
+   int byteswritten = 0;
+   for (unsigned int i=0; i<bobsalt.size(); i++) {
+      std::cout << "," << (int) bobsalt[i];
+   }
+   std::cout << "\n";
+   byteswritten = pwfile.writeBytes<uint8_t>(bobsalt);
+   std::cout << "byteswriten var for salt is: " << byteswritten << std::endl;
+   
+   //WRITE THE PASSWORD HASH
+   byteswritten = pwfile.writeBytes<uint8_t>(bobhash);
+   pwfile.writeFD("\n"); // append newline after salt and passwd hash
+   for (unsigned int i=0; i<bobhash.size(); i++) {
+      std::cout << "," << (int) bobhash[i];
+   }
+   std::cout << "byteswriten var for hash is: " << byteswritten << std::endl;
+   std::cout << "\n";
+   
+   //close the file      
+   pwfile.closeFD();
+   
+   //TODO:PROGRAM THIS LATER
+   //writeUser(pwfile, newname, bobhash, bobsalt);
 
    std::cout << "Press Enter Key to Exit addUser()\n\n";
    getchar();
