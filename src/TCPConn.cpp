@@ -164,7 +164,9 @@ void TCPConn::getUsername() {
 
 void TCPConn::getPasswd() {
    // Insert your astounding code here
-   
+   std::cout << "Enter getPasswd() and Do Something\n"; 
+
+    
    //STEP0: Hardcode passwd variable
    //SKIPPING THIS
    
@@ -189,6 +191,8 @@ void TCPConn::getPasswd() {
    //STEP3: IF user authenticates, send the menu, set status to menu, ELSE disconnect
    _status = s_menu;
    sendMenu();
+   std::cout << "Press Enter Key to Exit getPasswd()\n\n";
+   getchar();
    }
    //std::cout << "looping inside getPassword()\n";
 
@@ -205,6 +209,10 @@ void TCPConn::getPasswd() {
 
 void TCPConn::changePassword() {
    // Insert your amazing code here
+   std::cout << "Enter changePassword() and DO SOMETHING\n"; 
+   std::cout << "Press Enter Key to Exit getPasswd()\n\n";
+   getchar();
+   
 }
 
 
@@ -314,6 +322,7 @@ void TCPConn::displayCountdown () {
  *    Throws: runtime_error for unrecoverable issues
  **********************************************************************************************/
 void TCPConn::sendMenu() {
+   std::cout << "Enter sendMenu() and DO SOMETHING\n"; 
    std::string menustr;
 
    // Make this your own!
@@ -330,6 +339,10 @@ void TCPConn::sendMenu() {
    menustr += "  Exit - disconnect.\n\n";
 
    _connfd.writeFD(menustr);
+   
+   std::cout << "Press Enter Key to Exit sendMenu()\n\n";
+   getchar();   
+   
 }
 
 
