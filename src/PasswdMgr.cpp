@@ -1,3 +1,4 @@
+//Is the <argon2.h> in brackets correct
 #include <argon2.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,6 +9,8 @@
 #include "PasswdMgr.h"
 #include "FileDesc.h"
 #include "strfuncts.h"
+//LARKIN ADDITIONS
+#include "argon2.h"
 
 const int hashlen = 32;
 const int saltlen = 16;
@@ -165,7 +168,13 @@ int PasswdMgr::writeUser(FileFD &pwfile, std::string &name, std::vector<uint8_t>
    std::cout << "Enter writeUser() and DO SOMETHING\n"; 
    int results = 0;
 
+   std::cout << "did my std::string newname (name) thing work?\n &name is:" << name << "\n";
    // Insert your wild code here!
+   //ssize_t FileDesc::writeByte(unsigned char data) {return write(_fd, &data, 1);}
+
+   //ssize_t FileDesc::writeFD(const char *data) {
+   pwfile.writeFD(name);
+   //pwfile.writeBytes();
 
    std::cout << "Press Enter Key to Exit writeUser()\n\n";
    getchar();
@@ -194,6 +203,7 @@ bool PasswdMgr::findUser(const char *name, std::vector<uint8_t> &hash, std::vect
    std::cout << "hash: " << &hash << std::endl;
    std::cout << "salt: " << &salt << std::endl;
 
+   //REMEMBER: findUser will get called first and this FileFD will get created... but as a local variable
    FileFD pwfile(_pwd_file.c_str());
 
    // You may need to change this code for your specific implementation
@@ -239,9 +249,91 @@ void PasswdMgr::hashArgon2(std::vector<uint8_t> &ret_hash, std::vector<uint8_t> 
                            const char *in_passwd, std::vector<uint8_t> *in_salt) {
    // Hash those passwords!!!!
    std::cout << "Enter hashArgon2() and DO SOMETHING\n"; 
+
+   //what do i have in the funciton and how do i access it
+   std::cout << ret_hash.at(0) << "..." << ret_hash.at(31) << "\n";
+   std::cout << ret_salt.at(0) << "..." << ret_salt.at(15) << "\n";
+   std::cout << in_passwd << "\n";
+   // NOPE CANT DO THIS... std::cout << "Size of in_passwd is: " << sizeof(in_passwd) << "\n";
+   std::cout << "strlen() of in_password is: " << strlen(in_passwd) << "\n";
+   //std::cout << "sizeof(in_passwd)/sizeof(*in_passwd): " << (sizeof(in_passwd)/sizeof(*in_passwd)) << "\n";
+   //std::cout << in_salt << "\n";   // this was null for initial add user
    
-   // the argon2 wants a unit8_t array and NOT a vector
+   // the argon2 wants a uint8_t array and NOT a vector
+   uint8_t uintpasswd[strlen(in_passwd)]; 
+   std::cout << "Priting out uintpassword: ";
+   for (int i = 0; i < strlen(in_passwd); i++){
+      uintpasswd[i] = in_passwd[i];
+      std::cout << uintpasswd[i] << ".";
+   }
+   std::cout << std::endl;
+   std::cout << "sizeof(uintpasswd) is: " << sizeof(uintpasswd) << std::endl;
+   //std::cout << "strlen(uintpasswd) is: " << strlen(uintpasswd);
+   
+   uint8_t uinthash[32]; 
+   std::cout << "Priting out uinthash: ";
+   for (int i = 0; i < 32; i++){
+      uinthash[i] = ret_hash[i];
+      std::cout << uinthash[i] << ".";
+   }
+   std::cout << std::endl;
+
+   uint8_t uintsalt[16]; 
+   std::cout << "Priting out uintsalt: ";
+   for (int i = 0; i < 16; i++){
+      uintsalt[i] = ret_salt[i];
+      std::cout << uintsalt[i] << ".";
+   }
+   std::cout << std::endl;
+   /*ARGON PARAMTERS PASSED TO WEBSITE: https://antelle.net/argon2-browser/ 
+   //  username = bob, password = bob, salt = thisismysaltof16
+   //  memory = 1024 Kib, Iterations = 1, Hash length = 32, parallelism = 1, type - Argon2d
+   /********  RESULTS ARE ******
+    * [00.001] Testing Argon2 using Binaryen native-wasm
+    * [00.492] Params: pass=bob, salt=thisismysaltof16, time=1, mem=1024, hashLen=32, parallelism=1, type=0
+    * [00.503] Encoded: $argon2d$v=19$m=1024,t=1,p=1$dGhpc2lzbXlzYWx0b2YxNg$mstW02XGT3/YAYvAhNN/TLxw4ZIhyNNk+yBndXVmdSI
+    * [00.503] Hash: 9acb56d365c64f7fd8018bc084d37f4cbc70e19221c8d364fb20677575667522
+   */
+
+   //ARGON PARAMTERS PASSED TO argon2i_hash_raw() 
+   //argon2i_hash_raw(1, (1<<10), 1, uintpasswd, sizeof(uintpasswd), &ret_salt, 16, &ret_hash, 32);
+   //IN THIS FUNCTION... returnhash is blank with a size of 1000
+   
+   //THIS PROCESSES PROCESS MODIFIES uinthash which can be copied back over into ret_hash
+   argon2i_hash_raw(1, (1<<10), 1, uintpasswd, sizeof(uintpasswd), uintsalt, 16, uinthash, 32);
+   
+   //FIRST TRY AND DID NOT WORK RIGHT
+   //argon2i_hash_raw(1, (1<<10), 1, uintpasswd, strlen(in_passwd), &ret_salt, ret_salt.size(), &ret_hash, ret_hash.size());
    // when the argon2 returns the array, loop over and put back into a vector
+
+   //WAHT DO I HAVE AFTER ARGON2 FUNCTION
+   std::cout << "after argon2\n";
+   std::cout << ret_hash.at(0) << "..." << ret_hash.at(31) << "\n";
+   std::cout << ret_salt.at(0) << "..." << ret_salt.at(15) << "\n";
+   
+   //std::cout << "Priting out uintpasswd: ";
+   //for (int i = 0; i < strlen(in_passwd); i++){
+      //uintpasswd[i] = in_passwd[i];
+   //   std::cout << uintpasswd[i] << ".";
+   //}
+   //std::cout << std::endl;
+   
+   std::cout << "Copying uinthash into ret_hash: ";
+   for (int i = 0; i < 32; i++){
+      ret_hash[i] = uinthash[i];
+      std::cout << ret_hash[i] << ".";
+   }
+   std::cout << std::endl;
+
+   //std::cout << "Priting out uintsalt: ";
+   //for (int i = 0; i < 16; i++){
+      //uintsalt[i] = ret_salt[i];
+   //   std::cout << uintsalt[i] << ".";
+   //}
+   //std::cout << std::endl;   
+   //std::cout << in_passwd << "\n";
+   //std::cout << in_salt << "\n";   // this was null for initial add user
+   
 
    std::cout << "Press Enter Key to Exit hashArgon2()\n\n";
    getchar();
@@ -263,31 +355,53 @@ void PasswdMgr::addUser(const char *name, const char *passwd) {
    std::cout << "passwd is: " << passwd << "\n";
 
    //create the uint8_t vectors to pass to the hashArgon2() function
-   std::vector<uint8_t> bobhash;
-   std::vector<uint8_t> bobsalt;
+   // YES a vecotr needs to declare an initial size
+   std::vector<uint8_t> bobhash(32);
+   std::vector<uint8_t> bobsalt(16);
+
+   //std::cout << bobhash.size();
    
    for (int i = 0; i<32; i++){
-      bobhash[i] = (rand() % 93) + 33;
-      std::cout << bobhash[i];
-   }
+      bobhash[i] = (rand() % 93) + 33; // This will get overwritten anyway
+      std::cout << bobhash[i] << ".";
+      //bobhash[10] = '\n'; // append newline works
+      //std::cout << i << ":" << bobhash.at(i) << "\n";
+   } 
    std::cout << std::endl;
 
-   std::string mysalt ("mysaltofsixteen");
+   //std::cout << "SEG FAULT YET...\n";
 
+   std::string mysalt ("thisismysaltof16");
    for (int i = 0; i<16; i++){
       bobsalt.at(i) = mysalt[i];
-      std::cout << bobsalt[i];
+      std::cout << mysalt[i] << ".";
+      //std::cout << i << ".";
+      //std::cout << bobsalt[i];
    }
    std::cout << std::endl;
 
    std::cout << "call(ing) the hashArgon2() function\n";
    //i can always pass in a null when a fuction expects a pointer
+   //REMEMBER: You cannot get the sizeof a pointer (its a memmory address)
    hashArgon2( bobhash, bobsalt, passwd, NULL);
-
-   hashArgon2(std::vector<uint8_t> &ret_hash, std::vector<uint8_t> &ret_salt, 
-                           const char *in_passwd, std::vector<uint8_t> *in_salt)
    
-   //then call write bytes and write to passwd file
+   //bobhash has been updated from the argon2 function
+   //call writeUser and write username, bobhash, bobsalt to passwd file
+   //PasswdMgr::writeUser(FileFD &pwfile, std::string &name, std::vector<uint8_t> &hash, std::vector<uint8_t> &salt)
+
+      //REMEMBER: findUser will get called first and this FileFD will get created... but as a local variable
+   FileFD pwfile(_pwd_file.c_str());
+
+   // You may need to change this code for your specific implementation
+   if (!pwfile.openFile(FileFD::readfd))
+      throw pwfile_error("Could not open passwd file for reading");
+
+   std::cout << "NO error means pwfile file descriptor was opened successfully???";
+   std::string newname (name); //WHY NOT JUST ACCEPT A CONST CHAR IN writeUser()...
+   pwfile.writeFD(newname);
+   
+   writeUser(pwfile, newname, bobhash, bobsalt);
+
 
    std::cout << "Press Enter Key to Exit addUser()\n\n";
    getchar();

@@ -194,7 +194,7 @@ void TCPServer::listenSvr() {
          std::string fromfile;
          int isOnWhitelist = 0;
          inputFile.open("./whitelist.txt");
-         while (inputFile >> fromfile) // NOT SURE ABOUT THIS... IS AN OPERATOR OVERLOADED?
+         while (inputFile >> fromfile) // The '>>' operator has been overloaded
          // VS CODE HOVER on '>>' says it extracts the rvalue stream... so stops when it sees a whitespace?
          {
             if(!inputFile.eof()){

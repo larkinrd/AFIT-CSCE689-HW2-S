@@ -60,13 +60,13 @@ int main(int argc, char *argv[]) {
       fflush(stdout);
 
       stdinFD.readStr(passwd1);
-      clrNewlines(passwd1);      
+      clrNewlines(passwd1);
 
       cout << "\nEnter the password again: ";
       fflush(stdout);      
 
       stdinFD.readStr(passwd2);
-      clrNewlines(passwd2);
+      clrNewlines(passwd2);      
 
       if (passwd2.compare(passwd1) == 0)
          valid_passwd = true;
