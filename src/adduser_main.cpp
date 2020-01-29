@@ -47,7 +47,12 @@ int main(int argc, char *argv[]) {
       exit(-1); 
    }
 
-   std::cout << "Are we here in the code\n";
+   std::cout << "Would you like to add user: " << username << " to the system (y/n)?";
+   if (getchar() == 'n') {
+      std::cout << "\nExiting program\n"; 
+      return 0;
+   }
+
 
    TermFD stdinFD;
 
@@ -78,7 +83,7 @@ int main(int argc, char *argv[]) {
    stdinFD.setEchoFD(true);
 
    pwm.addUser(username.c_str(), passwd2.c_str());
-   cout << "User added.\n";
+   cout << "User " << username << " added.\n";
    
 
    return 0;

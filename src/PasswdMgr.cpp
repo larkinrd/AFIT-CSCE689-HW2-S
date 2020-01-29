@@ -43,7 +43,7 @@ bool PasswdMgr::checkUser(const char *name) {
    // we have two variables to use at our disposal, first is passwd and second is salt
    std::cout << "Enter checkUser() and DO SOMETHING\n"; 
    
-   bool result = false; 
+   //bool result = false; 
    std::vector<uint8_t> passwd, salt; //just contain garbage right now
    
    /************************
@@ -52,17 +52,17 @@ bool PasswdMgr::checkUser(const char *name) {
 
    
    if( findUser(name, passwd, salt) == 1) {
-      std::cout << "Found user return true\n";
-      result = true;
-      //return true;
+      std::cout << "Found user, return true from findUser()\n";
+      //result = true;
+      return true;
    }
 
    std::cout << "Press Enter Key to Exit checkUser()\n\n";
    getchar();    
    
    //else return false, did not find user
-   //return false; //UMMM was 'return result' the original code?
-   return result;  
+   return false; //UMMM was 'return result' the original code?
+   //return result;  
 }
 
 /*******************************************************************************************
@@ -234,7 +234,7 @@ int PasswdMgr::writeUser(FileFD &pwfile, std::string &name, std::vector<uint8_t>
 bool PasswdMgr::findUser(const char *name, std::vector<uint8_t> &hash, std::vector<uint8_t> &salt) {
    std::cout << "Enter findUser() and DO SOMETHING\n"; 
 
-   bool results = false; //initialize to false... we have an unknown user
+   //bool results = false; //initialize to false... we have an unknown user
 
 
    //print out args passed to function
@@ -264,10 +264,11 @@ bool PasswdMgr::findUser(const char *name, std::vector<uint8_t> &hash, std::vect
          continue;
       }
       if (!uname.compare(name)) {
-         std::cout << "Executed the Compare Function" << std::endl;
-         results = true;
+         std::cout << "Executed the Compare Function, found match" << std::endl;
+         //results = true;
          pwfile.closeFD();
-         break; // if we found a user, break out of the while loop so that
+         return true;
+         //break; // if we found a user, break out of the while loop so that
          // the username, salt, and hash are in the current variables/registers
          //return true;
       }
@@ -282,7 +283,8 @@ bool PasswdMgr::findUser(const char *name, std::vector<uint8_t> &hash, std::vect
    
    std::cout << "Press Enter Key to Exit findUser()\n\n";
    getchar();
-   return results;
+   return false;
+   //return results;
 }
 
 
