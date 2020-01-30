@@ -16,14 +16,36 @@ const int hashlen = 32;
 const int saltlen = 16;
 
 //The PasswdMgr constructor accepts a password file name and save it
-// to the PasswdMgr classes private variable _pwd_file
+// to the PasswdMgr classes private variable _pwd_file declared
+// in PasswdMgr.h file
+// IN SHORT: pass in a Const Char and make it a string
 PasswdMgr::PasswdMgr(const char *pwd_file):_pwd_file(pwd_file) {
-   std::cout << "Enter PasswdMgr() Constructor and DO SOMETHING\n";
-   std::cout << " _pwd_file variable is: " << _pwd_file << "\n";
-   std::cout << "pwd_file argument is: " << pwd_file << "\n";
+   //std::cout << "Enter PasswdMgr() Constructor and DO SOMETHING\n";
+   //std::cout << " _pwd_file variable is: " << _pwd_file << "\n";
+   //std::cout << "pwd_file argument is: " << pwd_file << "\n";
  
-   std::cout << "Press Enter Key to Exit PasswdMgr() Constructor\n\n";
-   getchar();
+   FILE *fptr;
+   
+   if ((fptr = fopen(_pwd_file.c_str(),"r")) != NULL){
+            printf("Opened passwd file\n");
+   } else {
+      fptr = fopen(_pwd_file.c_str(),"w");
+      printf("TO PROGRAM: Created empty passwd file in current working directory\n"
+         "and added a user bob with password bob");
+      addUser("bob","bob");
+   }
+
+   
+   if(fptr == NULL)
+   {
+      printf("Error!");   
+      exit(1);             
+   }
+   fclose(fptr);// Close the fptr object for future use
+   //}  
+
+   //std::cout << "Press Enter Key to Exit PasswdMgr() Constructor\n\n";
+   //getchar();
 }
 
 
@@ -41,7 +63,9 @@ PasswdMgr::~PasswdMgr() {
 bool PasswdMgr::checkUser(const char *name) {
    //uses standard template library, a vector of unsigned 8 bit integers to store single chars
    // we have two variables to use at our disposal, first is passwd and second is salt
-   std::cout << "Enter checkUser() and DO SOMETHING\n"; 
+   std::cout << "Enter checkUser() and DO SOMETHING\n";
+   std::cout << "name passed inside of checkUser is: " << name << std::endl;
+
    
    //bool result = false; 
    std::vector<uint8_t> passwd, salt; //just contain garbage right now
@@ -51,7 +75,7 @@ bool PasswdMgr::checkUser(const char *name) {
    *************************/
 
    
-   if( findUser(name, passwd, salt) == 1) {
+   if(findUser(name, passwd, salt) == 1) {
       std::cout << "Found user, return true from findUser()\n";
       //result = true;
       return true;
@@ -80,22 +104,85 @@ bool PasswdMgr::checkUser(const char *name) {
 
 bool PasswdMgr::checkPasswd(const char *name, const char *passwd) {
    std::cout << "Enter checkPasswd() and DO SOMETHING\n"; 
-   std::vector<uint8_t> userhash; // hash from the password file
-   std::vector<uint8_t> passhash; // hash derived from the parameter passwd
-   std::vector<uint8_t> salt;
+   
+   //NOT DECLARING THE SIZES OF THE USERHASH AND PASSHASH
+   //SCREWED ME
+   
+   std::vector<uint8_t> userhash(32); // hash from the password file
+   std::vector<uint8_t> passhash(32); // hash derived from the parameter passwd
+   std::vector<uint8_t> salt(16);
 
-   // Check if the user exists and get the passwd string
+   
+   FileFD pwfile(_pwd_file.c_str());
+   pwfile.openFile(FileFD::readfd);
+
+   std::string stringstripnewline (passwd);
+   clrNewlines(stringstripnewline);
+   passwd = stringstripnewline.c_str();
+
+   std::cout << "PRINT VARIABLES BEFORE FINDUSER IN CHECKPASSWD: ";
+   std::cout << "const char *password is: " << passwd;
+   std::cout << "strlen(passwd) is: " << strlen(passwd);
+   for (int i = 0; i < 16; i++){ std::cout << salt[i] << "."; }
+   std::cout << std::endl;
+   for (int i = 0; i < 32; i++){ std::cout << userhash[i] << "."; }
+   std::cout << std::endl;
+   for (int i = 0; i < 32; i++){ std::cout << passhash[i] << "."; }
+   std::cout << std::endl;
+
+   // Check if the user exists and return the users hash and salt
    if (!findUser(name, userhash, salt))
       return false;
 
-   hashArgon2(passhash, salt, passwd, &salt);
+   std::cout << "PRINT VARIABLES AFTER FINDUSER IN CHECKPASSWD: ";
+   for (int i = 0; i < 16; i++){ std::cout << salt[i] << "."; }
+   std::cout << std::endl;
+   for (int i = 0; i < 32; i++){ std::cout << userhash[i] << "."; }
+   std::cout << std::endl;
+   for (int i = 0; i < 32; i++){ std::cout << passhash[i] << "."; }
+   std::cout << std::endl;
 
-   if (userhash == passhash)
+   std::string nametostring (name);
+   //readuser(pwfile, &name, &hash, &salt)
+   readUser(pwfile, nametostring, passhash, salt);
+
+   std::cout << "PRINT VARIABLES AFTER READUSER IN CHECKPASSWD: ";
+   for (int i = 0; i < 16; i++){ std::cout << salt[i] << "."; }
+   std::cout << std::endl;
+   for (int i = 0; i < 32; i++){ std::cout << userhash[i] << "."; }
+   std::cout << std::endl;
+   for (int i = 0; i < 32; i++){ std::cout << passhash[i] << "."; }
+   std::cout << std::endl;
+
+   //remember (&rethash, &retsalt, *inpasswd, *insalt)
+   //hashArgon2(passhash, salt, passwd, &salt);
+   hashArgon2(passhash, salt, passwd, NULL);
+   
+
+   std::cout << "PRINT VARIABLES AFTER HASHARGON2 IN CHECKPASSWD: ";
+   for (int i = 0; i < 16; i++){ std::cout << salt[i] << "."; }
+   std::cout << std::endl;
+   for (int i = 0; i < 32; i++){ std::cout << userhash[i] << "."; }
+   std::cout << std::endl;
+   for (int i = 0; i < 32; i++){ std::cout << passhash[i] << "."; }
+   std::cout << std::endl;
+   
+   
+   
+   if (userhash == passhash){
+      std::cout << "userhash is equal to passhash";
       return true;
+   } else {
+      return false;
+   }
+      
+   
+   
+   //std::cout << std::endl;
 
-   std::cout << "Press Enter Key to Exit checkPasswd()\n\n";
-   getchar();
-   return false;
+   //std::cout << "Press Enter Key to Exit checkPasswd()\n\n";
+   //getchar();
+
 }
 
 /*******************************************************************************************
@@ -140,7 +227,12 @@ bool PasswdMgr::readUser(FileFD &pwfile, std::string &name, std::vector<uint8_t>
 {
    // Insert your perfect code here!
    std::cout << "Enter readUser() and DO SOMETHING\n"; 
-
+   //std::cout << "pwfile in readUser() is: " << pwfile << "\n"; 
+   clrNewlines(name);
+   std::cout << "name in readUser() is: " << name << " may or may not be blank\n"; 
+    
+   
+   
    //STEP 0: Knowing this function gets called in a loop, we need to return one SET of uname, salt, hash
    //STEP 1: Read in one username, salt, and password
    //pwfile.openFile(FileFD::readfd);
@@ -149,9 +241,8 @@ bool PasswdMgr::readUser(FileFD &pwfile, std::string &name, std::vector<uint8_t>
    int bytesread = 0;
    bytesread = pwfile.readStr(name);
    if (bytesread == 0 ) {
+      std::cout << "print this end of file" << std::endl;
       return false; //we've reached the end of the passwd file
-      //std::cout << "print this" << std::endl;
-
    }
    std::cout << "username read from passwd file is: " << name << std::endl; //Does readStr() get the newline?
    
@@ -161,19 +252,19 @@ bool PasswdMgr::readUser(FileFD &pwfile, std::string &name, std::vector<uint8_t>
 
    //PRINT  THE SALT TO SCREEN   
    for (unsigned int i=0; i<salt.size(); i++) {
-      std::cout << "," << (int) salt[i];
+      //std::cout << "," << (int) salt[i];
    }
    //std::cout << "\n";
    //bytesread = pwfile.readBytes<uint8_t>(salt);
-   std::cout << "bytesread var for salt is: " << bytesread << std::endl;
+   //std::cout << "bytesread var for salt is: " << bytesread << std::endl;
    
    
    //READ THE PASSWORD HASH AND PRINT TO SCREEN
    bytesread = pwfile.readBytes<uint8_t>(hash, 32);
    for (unsigned int i=0; i<hash.size(); i++) {
-      std::cout << "," << (int) hash[i];
+      //std::cout << "," << (int) hash[i];
    }
-   std::cout << "bytes read var for hash is: " << bytesread << std::endl;
+   //std::cout << "bytes read var for hash is: " << bytesread << std::endl;
   // std::cout << "\n";
 
    uint8_t togetnewline;
@@ -181,7 +272,7 @@ bool PasswdMgr::readUser(FileFD &pwfile, std::string &name, std::vector<uint8_t>
    // I NEED if(!pwfile.readbytes<uint8_t>(hash, 32) < 0)
    //print out what was passed
    
-   std::cout << "Press Enter Key to Exit readUser()\n\n";
+   std::cout << "Press Enter Key to Exit readUser()";
    getchar();
    return true;
 }
@@ -233,12 +324,19 @@ int PasswdMgr::writeUser(FileFD &pwfile, std::string &name, std::vector<uint8_t>
 
 bool PasswdMgr::findUser(const char *name, std::vector<uint8_t> &hash, std::vector<uint8_t> &salt) {
    std::cout << "Enter findUser() and DO SOMETHING\n"; 
+   
+   //convert const char *name to string
+   std::string makeastring (name);
+   clrNewlines(makeastring); 
+   std::cout << "name passed inside of findUser is: " << name;
+   std::cout << "name is now makeastring and is: " << makeastring;
+   
 
    //bool results = false; //initialize to false... we have an unknown user
 
 
    //print out args passed to function
-   std::cout << "name: " << name << std::endl;
+   //std::cout << "name: " << name << std::endl;
    //std::cout << "hash: " << hash << std::endl;
    //std::cout << "salt: " << salt << std::endl;
 
@@ -253,17 +351,21 @@ bool PasswdMgr::findUser(const char *name, std::vector<uint8_t> &hash, std::vect
    //pwfile.openFile(FileFD::readfd);
    bool eof = false;
    while (!eof) {
-      std::string uname;
-
+      std::string uname; //create an emptry string for readuser to return
+      // a result to
+      
       //if (readUser(pwfile, uname, hash, salt)==true){
          // A user, salt, password has been returned and weve NOT reached end of file
       //   std::cout << "name is :" << name << " and uname is: " << uname << "\n";
-      
+      std::cout << "when does this execute alpha";
       if (!readUser(pwfile, uname, hash, salt)) {
+         std::cout << "\nwhen does this execute bravo\n";
          eof = true;
          continue;
       }
-      if (!uname.compare(name)) {
+      std::cout << "name is: " << name << "and  makeastring is: " << makeastring << " and uname is: " << uname;
+      
+      if (!uname.compare(makeastring)) {
          std::cout << "Executed the Compare Function, found match" << std::endl;
          //results = true;
          pwfile.closeFD();
@@ -272,7 +374,7 @@ bool PasswdMgr::findUser(const char *name, std::vector<uint8_t> &hash, std::vect
          // the username, salt, and hash are in the current variables/registers
          //return true;
       }
-      
+       std::cout << "when does this execute charlie";
    }
 
    //why am I clearing all of these... don't I want to save them for passwd checking???
@@ -305,9 +407,9 @@ void PasswdMgr::hashArgon2(std::vector<uint8_t> &ret_hash, std::vector<uint8_t> 
    //what do i have in the funciton and how do i access it
    std::cout << ret_hash.at(0) << "..." << ret_hash.at(31) << "\n";
    std::cout << ret_salt.at(0) << "..." << ret_salt.at(15) << "\n";
-   std::cout << in_passwd << "\n";
+   std::cout << "inpassword was: " << in_passwd << "with strlen of: " << strlen(in_passwd);
    // NOPE CANT DO THIS... std::cout << "Size of in_passwd is: " << sizeof(in_passwd) << "\n";
-   std::cout << "strlen() of in_password is: " << strlen(in_passwd) << "\n";
+   //std::cout << "strlen() of in_password is: " << strlen(in_passwd) << "\n";
    //std::cout << "sizeof(in_passwd)/sizeof(*in_passwd): " << (sizeof(in_passwd)/sizeof(*in_passwd)) << "\n";
    //std::cout << in_salt << "\n";   // this was null for initial add user
    
@@ -351,6 +453,7 @@ void PasswdMgr::hashArgon2(std::vector<uint8_t> &ret_hash, std::vector<uint8_t> 
    //argon2i_hash_raw(1, (1<<10), 1, uintpasswd, sizeof(uintpasswd), &ret_salt, 16, &ret_hash, 32);
    //IN THIS FUNCTION... returnhash is blank with a size of 1000
    
+
    //THIS PROCESSES PROCESS MODIFIES uinthash which can be copied back over into ret_hash
    argon2i_hash_raw(1, (1<<10), 1, (uint8_t *)in_passwd, strlen(in_passwd), uintsalt, 16, uinthash, 32);
    

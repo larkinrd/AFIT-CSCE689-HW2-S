@@ -64,9 +64,10 @@ int main(int argc, char *argv[]) {
       }
 
    }
-
+   
    // Try to set up the server for listening
-   TCPServer server;
+   //modified TCPServerConstructor to pass in a logfile
+   TCPServer server("logfile");
    try {
       cout << "Binding server to " << ip_addr << " port " << port << endl;
       server.bindSvr(ip_addr.c_str(), port);
@@ -78,6 +79,7 @@ int main(int argc, char *argv[]) {
    }	   
 
    cout << "Server established.\n";
+   
 
    try {
       cout << "Listening.\n";	   

@@ -1,0 +1,7 @@
+Successfully Created and wrote to my Log File
+= = = = = = = = = = = = = = = = 
+
+Wed Jan 29 23:41:37 2020 :: Server Started
+Wed Jan 29 23:41:37 2020 :: Completed bindSvr() function
+Wed Jan 29 23:41:40 2020 :: Received connection from IP 127.0.0.1
+Wed Jan 29 23:41:40 2020 :: Connection from Whitelisted IP 127.0.0.1 accepted

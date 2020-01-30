@@ -32,6 +32,9 @@ int main(int argc, char *argv[]) {
       exit(0);
    }
 
+   //check for passwd file, if not present, create it
+   
+
    // Read in the username to add to the password file
    std::string username(argv[1]); //WHY IS THIS CHAR** WITH TWO STARS?
 

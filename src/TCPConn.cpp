@@ -9,14 +9,24 @@
 //LARKIN ADDITIONS
 #include <thread>
 #include <chrono>
+#include "PasswdMgr.h"
 
-// The filename/path of the password file
+// The filename/path of the password file so that if we ever want to 
+//   use a different password file (the one written to disk), we don't
+//   have to update everywhere in this file... just up here at the top
 const char pwdfilename[] = "passwd";
+const char logfilename[] = "logfile";
+//PasswdMgr myPasswdMgrObject(pwdfilename);
 
 TCPConn::TCPConn(){ // LogMgr &server_log):_server_log(server_log) {
 
 }
 
+//ENTER THE NEW CONSTRUCTOR WITH THE TCP SERVER OBJECT SO I 
+//CAN WRITE TO MY LOG FILE... I ONLY WANT ONE TCP SERVER
+//TCPConn::TCPConn(TCPServer &svr):_mysvr(svr){
+
+//}
 
 TCPConn::~TCPConn() {
 
@@ -72,6 +82,8 @@ void TCPConn::startAuthentication() {
    //if(_status == s_passwd){
    //   _connfd.writeFD("Enter password:");
    //} 
+   //TESTING THIS... AM I ACCESSING MY PASSWORD FILE
+
 
    
 }
@@ -144,13 +156,22 @@ void TCPConn::getUsername() {
    if (_connfd.hasData()) {
    _connfd.readFD(_username);
    std::cout << "_username entered was:" << _username << "\n";
+
    
    //STEP2: Check the username against the database file 'passwd' NOT PROGRAMMED YET
-   // USE PasswdMgr::checkUser() to do this
-
+   PasswdMgr myPasswdMgrObject(pwdfilename);
+   if(myPasswdMgrObject.checkUser(_username.c_str()) == true){
    //STEP3: IF Good username update status, prompt for password, ELSE disconnect client
    _status = s_passwd;
    _connfd.writeFD("Enter password: ");
+   } else {
+      //disconnect due to bad username
+      _connfd.writeFD("Bad Usernname Disconnecting...goodbye!\n");
+      disconnect();
+   }
+   
+
+
    }
 }
 
@@ -164,7 +185,7 @@ void TCPConn::getUsername() {
 
 void TCPConn::getPasswd() {
    // Insert your astounding code here
-   std::cout << "Enter getPasswd() and Do Something\n"; 
+   //std::cout << "Enter getPasswd() and Do Something\n"; 
 
     
    //STEP0: Hardcode passwd variable
@@ -181,16 +202,35 @@ void TCPConn::getPasswd() {
    _connfd.readFD(_inputbuf);
    std::cout << "passwd entered was:" << _inputbuf << " and is stored in _inputbuf\n";
    
+   //std::string enteredusername (_username);
+   //std::string enteredpasswd (_inputbuf);
+   PasswdMgr myPasswdMgrObject(pwdfilename);
+   bool result = false;
+   std::cout << "result of pwdObject is: " << result;
+   result = myPasswdMgrObject.checkPasswd(_username.c_str(), _inputbuf.c_str());
+   std::cout << "result of pwdObject is: " << result;
+//   if(myPasswdMgrObject.checkPasswd(_username.c_str(), _inputbuf.c_str()) == true){
+//      std::cout << "GOOD PASSWORD";
+//   } else {
+//      _pwd_attempts++;
+//      if ( _pwd_attempts ==2 ) {
+//      _connfd.writeFD("Two Bad Password attempts... Disconnecting...goodbye!\n");
+//      disconnect();
+//      }
+//   }
+   /*
    std::cout << "\nHalting progrmain in <TCPConn::getPasswd()>\n"
       "Prior to this you should have checked\n"
       "1. Was the username valid\n"
       "2. Is their password correct\n"
       "Press a key on tcpserver to display the menu to tcpclient\n";
    getchar();
-   
+   */
    //STEP3: IF user authenticates, send the menu, set status to menu, ELSE disconnect
-   _status = s_menu;
-   sendMenu();
+   
+   
+   //_status = s_menu;
+   //sendMenu();
    std::cout << "Press Enter Key to Exit getPasswd()\n\n";
    getchar();
    }
@@ -372,4 +412,3 @@ bool TCPConn::isConnected() {
 void TCPConn::getIPAddrStr(std::string &buf) {
    return _connfd.getIPAddrStr(buf);
 }
-

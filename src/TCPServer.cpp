@@ -16,13 +16,81 @@
 #include <stdio.h> // for reading and writing text file
 #include <stdlib.h> // for reading and writing text file
 #include <cstring> //is/was using insecure c string for whitelist
-
+#include "strfuncts.h"
 
 
 
 TCPServer::TCPServer(){ // :_server_log("server.log", 0) {
 }
 
+//As Lt Col Noel just explained this Constructor, like in PasswdMgr
+// only takes in a const char* and saves it to a private string
+// variable named _log_file
+TCPServer::TCPServer(const char *log_file):_log_file(log_file) {
+   //std::cout << "Enter TCPServer(const char *log_file):_server_log(log_file) Constructor\n";
+  // std::cout << "_log_file variable is: " << _log_file << "\n";
+   //std::cout << "_log_file argument is: " << log_file << "\n";
+ 
+// HERE IS MY CODE
+
+//STEP XX: read in a file using #include <stdio.h> and <stdlib.h> at top
+         
+      FILE *fptr;
+      //if ((fptr = fopen("./whitelist.txt","r")) == NULL){
+      //   printf("Cannot open input file - whitelist.txt.\n");
+      //STEP 3B: If no file, create one using #include <stdio.h> and <stdlib.h> at top
+      fptr = fopen(_log_file.c_str(),"w");
+      printf("TO SERVER: Created logfile in current working directory\n");
+      if(fptr == NULL)
+      {
+         printf("Error!");   
+         exit(1);             
+      }
+      //printf("Enter num: ");
+      //scanf("%d",&num);
+      //fprintf(fptr,"10.10.10.10\n"); //Remeber the '\n'
+      //fprintf(fptr,"127.0.0.2\n");  // Add a second entry 
+      //fprintf(fptr, "127.0.0.1\n"); // Comment out and delete ./whitelist.txt to test
+      //printf("Wrote whitlisted IPs to ./logfile\n");
+      fprintf(fptr,"Successfully Created and wrote to my Log File\n"
+         "= = = = = = = = = = = = = = = = \n\n"); //Remeber the '\n'
+      fclose(fptr);// Close the fptr object for future use
+      //}  
+
+   /*********************************
+    * HERE IS COL NOELS CODE I morphed and not needed anymore
+
+   //just created the logfile ?object? within the constructor
+   FileFD logfile(_log_file.c_str());
+
+   //test to open the logfile
+   if (!logfile.openFile(FileFD::readfd))
+      throw pwfile_error("Could not open log file for reading");
+
+   //use COL NOELS functions to append to file
+   logfile.openFile(FileFD::appendfd);
+   logfile.writeFD("use noels to apend to file\n");
+   std::string justastring ("this is just a string\n");
+   logfile.writeFD(justastring);
+
+   int bytesWritten = writeToLogFile(logfile, justastring);
+   //std::cout << "wrote " << i << " bytes to log file in constructor" << std::endl;
+   ****************************************************/
+
+   //std::cout << "Press Enter Key to Exit PasswdMgr() Constructor\n\n";
+   //getchar();
+
+   //FOR FUTURE USE JUST COPY THIS CODE TO WRITE LOG MESSAGE
+   // FileFD logfile(_log_file.c_str());
+   // std::string logmsg ("this is just a log msg\n");
+   // int bytesWritten = writeToLogFile(logfile, logmsg);
+   // std::cout << "wrote " << bytesWritten << " bytes to log file" << std::endl;
+   
+   //TO MAKE BETTER, 
+   // Create a logmsg buffer variable
+   // Do I always need to declare the FileFD???
+
+}
 
 TCPServer::~TCPServer() {
 
@@ -41,13 +109,32 @@ void TCPServer::bindSvr(const char *ip_addr, short unsigned int port) {
 
    // _server_log.writeLog("Server started.");
    /*LARKIN - Time permitting... write to a log file*/
-
+   FileFD logfile(_log_file.c_str());
+   _logmsg = "Server Started";
+   int bytesWritten = writeToLogFile(logfile, _logmsg); 
    // Set the socket to nonblocking
    _sockfd.setNonBlocking();
 
    // Load the socket information to prep for binding
    _sockfd.bindFD(ip_addr, port);
- 
+   
+   //FileFD logfile(_log_file.c_str()); //Not sure if I need this everytime
+   //logfile.openFile(FileFD::appendfd);
+   //std::string justastring ("this is just a string in bindSvr()\n");
+   //logfile.writeFD(justastring);
+   //logfile.writeFD("Ended bindSvr()\n");
+   //logfile.closeFD();
+   //std::cout << "this executed\n";
+
+   //FOR FUTURE USE JUST COPY THIS CODE TO WRITE LOG MESSAGE
+   
+   //Commented out below becuase I made a class wide private variable
+   // called _logmsg
+    //std::string logmsg ("Completed bindSvr() function");
+    _logmsg = "Completed bindSvr() function";
+    bytesWritten = writeToLogFile(logfile, _logmsg);
+    //std::cout << "wrote " << bytesWritten << " bytes to log file" << std::endl;
+   
 }
 
 /**********************************************************************************************
@@ -65,6 +152,9 @@ void TCPServer::listenSvr() {
    sleeptime.tv_sec = 0;
    sleeptime.tv_nsec = 100000000;
    int num_read = 0;
+   FileFD logfile(_log_file.c_str()); //create logfile FildFD
+   //std::string logmsg; //decalre local logmsg variable for listenSvr()
+   int bytesWritten = 0; //for use with writing to logfile
 
    // Start the server socket listening
    _sockfd.listenFD(5);
@@ -75,7 +165,7 @@ void TCPServer::listenSvr() {
       socklen_t len = sizeof(cliaddr);
 
       if (_sockfd.hasData()) {
-         TCPConn *new_conn = new TCPConn();
+         TCPConn *new_conn = new TCPConn();//*this);
          /*LARKIN COMMENTS*****
          * The -> is called the arrow operator which is used to 
          * access members of a structure. Use the dot operator (.) to
@@ -104,6 +194,9 @@ void TCPServer::listenSvr() {
          * *****END LARKIN COMMENTS*****/       
          std::string client_ipaddr_str;
          new_conn->getIPAddrStr(client_ipaddr_str);
+         _logmsg = "Received connection from IP ";
+         _logmsg += client_ipaddr_str;
+         bytesWritten = writeToLogFile(logfile, _logmsg);
               
          //STEP 2: compare the IP address to a whiltelist via hard code
          /* Code commented out becuase I got it working
@@ -129,11 +222,14 @@ void TCPServer::listenSvr() {
          //STEP 3A: read in a file using #include <stdio.h> and <stdlib.h> at top
          int num;
          FILE *fptr;
-         if ((fptr = fopen("./whitelist.txt","r")) == NULL){
-            printf("Cannot open input file - whitelist.txt.\n");
+         
+         //commmented out next to lines so that whitelist is created
+         //every time this runs
+         //if ((fptr = fopen("./whitelist.txt","r")) == NULL){
+         //   printf("Cannot open input file - whitelist.txt.\n");
          //STEP 3B: If no file, create one using #include <stdio.h> and <stdlib.h> at top
-               fptr = fopen("./whitelist.txt","w");
-               printf("TO SERVER: Created whitelist.txt file in current working directory\n");
+               fptr = fopen("./whitelist","w");
+               printf("TO SERVER: Created whitelist file in current working directory\n");
                if(fptr == NULL)
                {
                   printf("Error!");   
@@ -141,12 +237,12 @@ void TCPServer::listenSvr() {
                }
                //printf("Enter num: ");
                //scanf("%d",&num);
-               fprintf(fptr,"10.10.10.10\n"); //Remeber the '\n'
+               fprintf(fptr,"10.10.10.10\n");
                fprintf(fptr,"127.0.0.2\n");  // Add a second entry 
                fprintf(fptr, "127.0.0.1\n"); // Comment out and delete ./whitelist.txt to test
-               printf("Wrote whitlisted IPs to ./whitelist.txt\n");
+               printf("TO SERVER: Wrote whitlisted IPs to ./whitelist\n");
                fclose(fptr);// Close the fptr object for future use
-         }
+         //}
 
          /****BEGIN LARKIN COMMENTS****
          * This whole section of STEP3C was a failure... here were my gotcha's
@@ -193,18 +289,26 @@ void TCPServer::listenSvr() {
          std::ifstream inputFile;
          std::string fromfile;
          int isOnWhitelist = 0;
-         inputFile.open("./whitelist.txt");
+         inputFile.open("./whitelist");
          while (inputFile >> fromfile) // The '>>' operator has been overloaded
          // VS CODE HOVER on '>>' says it extracts the rvalue stream... so stops when it sees a whitespace?
          {
             if(!inputFile.eof()){
-            std::cout << "TO SERVER: ./whitelist.txt file contains: " << fromfile << "\n";
+            //std::cout << "TO SERVER: ./whitelist.txt file contains: " << fromfile << "\n";
                if (fromfile.compare(client_ipaddr_str) == 0) {
-                     std::cout << "TO SERVER: Strings are equal: " << client_ipaddr_str << "\nStart Authentication";
+                     //std::cout << "TO SERVER: Strings are equal: " << client_ipaddr_str << "\nStart Authentication";
                      new_conn->sendText("TO CLIENT: You ARE on my whitelist\n");
+                     _logmsg = "Connection from Whitelisted IP ";
+                     _logmsg += client_ipaddr_str;
+                     _logmsg += " accepted";
+                     bytesWritten = writeToLogFile(logfile, _logmsg);
                      isOnWhitelist = 1;
                      //break; //break from ????while loop, add TCPConn object to the 'stack' of std::unique_ptr<TCPconn> and
                            // start authentication
+                  _connlist.push_back(std::unique_ptr<TCPConn>(new_conn));
+                  new_conn->sendText("Welcome to the CSCE 689 Server!\n");
+                  new_conn->startAuthentication();
+
                }
             }
          }
@@ -212,10 +316,14 @@ void TCPServer::listenSvr() {
          //After looping over the whitelist file, test if user was on whitelist
          if(isOnWhitelist == 0){
                //} else {
-                  std::cout << "Strings are NOT EQUAL\n";
-                  std::cout << "TO SERVER: Unauthorized connection attempt from: " << client_ipaddr_str << "\n";
-                  new_conn->sendText("TO CLIENT: You are NOT on my whitelist\n");
+                  //std::cout << "Strings are NOT EQUAL\n";
+                  //std::cout << "TO SERVER: Unauthorized connection attempt from: " << client_ipaddr_str << "\n";
+                  new_conn->sendText("TO CLIENT: You are NOT authorized to connect\n");
                   new_conn->disconnect();
+                  _logmsg = "Unauthorized connection attempt from IP ";
+                  _logmsg += client_ipaddr_str;
+                   bytesWritten = writeToLogFile(logfile, _logmsg);
+                 
                //}
          }         
 
@@ -228,17 +336,17 @@ void TCPServer::listenSvr() {
          *    through a pointer and disposes of that object when the unique_ptr goes
          *    out of scope. 
          *****END LARKIN COMMENTS*****/       
-         _connlist.push_back(std::unique_ptr<TCPConn>(new_conn));
+         //_connlist.push_back(std::unique_ptr<TCPConn>(new_conn));
 
          //Lt Col Noels code commented out becuase I used it eariler (scroll up)
          //std::string ipaddr_str;
          //new_conn->getIPAddrStr(ipaddr_str); 
          
-         new_conn->sendText("Welcome to the CSCE 689 Server!\n");
+         //new_conn->sendText("Welcome to the CSCE 689 Server!\n");
          
          // Change this later
          //We have a valid connection on our whitelist, so begin authentication
-         new_conn->startAuthentication();
+         //new_conn->startAuthentication();
       }
 
       // Loop through our connections, handling them
@@ -249,7 +357,18 @@ void TCPServer::listenSvr() {
          if (!(*tptr)->isConnected()) {
             // Log it
 
-            // Remove them from the connect list
+            // Remove them from the connect list and log to logfile
+            _logmsg = "IP ";
+            std::string tempstring; 
+
+            //I GUESS this iterates over unique PTRs that contain
+            //TCPconn objects, the syntax below gives us access to 
+            //TCPconn methods/functions
+            (*tptr)->getIPAddrStr(tempstring);
+            _logmsg += tempstring;
+            _logmsg += " disconnected from the server";
+            bytesWritten = writeToLogFile(logfile ,_logmsg);
+            
             tptr = _connlist.erase(tptr);
             std::cout << "Connection disconnected.\n";
             continue;
@@ -284,4 +403,37 @@ void TCPServer::shutdown() {
    _sockfd.closeFD();
 }
 
+/**********************************************************************************************
+ * writeToLogFile - add to the serverlog
+ *    Params - Pass in the logfile and the String message to add
+ *    Throws: ??
+ **********************************************************************************************/
+
+
+int TCPServer::writeToLogFile(FileFD &logfile, std::string &logmsg) {
+   //std::cout << "serverlog() called" << std::endl;
+   //THE File object must already be created and passed
+   if (!logfile.openFile(FileFD::readfd))
+      throw pwfile_error("Could not open log file for reading");
+
+   //use COL NOELS functions to append to file
+   logfile.openFile(FileFD::appendfd);
+  
+   // get the current date/time based on current system
+   time_t now = time(0);
+   
+   // convert now to string form
+   char* dt = ctime(&now);
+   std::string mydatetime (dt); // convert char * to string
+   clrNewlines(mydatetime);
+   int bytesWritten = logfile.writeFD(mydatetime);
+   bytesWritten += logfile.writeFD(" :: ");
+   clrNewlines(logmsg); //strip any/all newlines
+   bytesWritten += logfile.writeFD(logmsg); 
+   bytesWritten += logfile.writeFD("\n"); //append a newline
+   logfile.closeFD();
+   std::cout << "wrote " << bytesWritten << " bytes to log file." << std::endl;
+   return bytesWritten;
+   //return 1;
+}
 
