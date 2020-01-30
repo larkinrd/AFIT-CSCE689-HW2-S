@@ -20,6 +20,7 @@ class PasswdMgr {
       bool changePasswd(const char *name, const char *newpassd);
    
       void addUser(const char *name, const char *passwd);
+      //void deleteUser(const char *name);
 
       void hashArgon2(std::vector<uint8_t> &ret_hash, std::vector<uint8_t> &ret_salt, const char *passwd, 
                                                                                  std::vector<uint8_t> *in_salt = NULL);

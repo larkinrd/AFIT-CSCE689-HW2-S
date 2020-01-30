@@ -47,6 +47,11 @@ int main(int argc, char *argv[]) {
    if (pwm.checkUser(username.c_str()))
    {
       cerr << "That user already has an account.\n";
+      //std::cout << "Want to delete them? type 'd'";
+      //if (getchar() == 'd') {
+      //pwm.deleteUser(username.c_str());
+      //}
+      
       exit(-1); 
    }
 
@@ -55,6 +60,7 @@ int main(int argc, char *argv[]) {
       std::cout << "\nExiting program\n"; 
       return 0;
    }
+
 
 
    TermFD stdinFD;

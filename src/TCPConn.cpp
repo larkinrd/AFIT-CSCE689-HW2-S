@@ -74,7 +74,7 @@ void TCPConn::startAuthentication() {
 
    // Skipping this for now
    _status = s_username;
-   std::cout << "TO SERVER: Inside TCPConn::startAuthentication and looping inside \n";
+   //std::cout << "TO SERVER: Inside TCPConn::startAuthentication and looping inside \n";
    
    _connfd.writeFD("Username: ");
 
@@ -155,7 +155,7 @@ void TCPConn::getUsername() {
    //STEP1: Get the user input after they pass back a username
    if (_connfd.hasData()) {
    _connfd.readFD(_username);
-   std::cout << "_username entered was:" << _username << "\n";
+   //std::cout << "_username entered was:" << _username << "\n";
 
    
    //STEP2: Check the username against the database file 'passwd' NOT PROGRAMMED YET
@@ -166,7 +166,7 @@ void TCPConn::getUsername() {
    _connfd.writeFD("Enter password: ");
    } else {
       //disconnect due to bad username
-      _connfd.writeFD("Bad Usernname Disconnecting...goodbye!\n");
+      _connfd.writeFD("Bad Username Disconnecting...goodbye!\n");
       disconnect();
    }
    
@@ -200,15 +200,29 @@ void TCPConn::getPasswd() {
    //    std::cout << "passwd entered was:" << tempPasswd << "\n";
    
    _connfd.readFD(_inputbuf);
-   std::cout << "passwd entered was:" << _inputbuf << " and is stored in _inputbuf\n";
+   //std::cout << "passwd entered was:" << _inputbuf << " and is stored in _inputbuf\n";
    
    //std::string enteredusername (_username);
    //std::string enteredpasswd (_inputbuf);
    PasswdMgr myPasswdMgrObject(pwdfilename);
    bool result = false;
-   std::cout << "result of pwdObject is: " << result;
+   //std::cout << "result of pwdObject is: " << result;
    result = myPasswdMgrObject.checkPasswd(_username.c_str(), _inputbuf.c_str());
-   std::cout << "result of pwdObject is: " << result;
+   //std::cout << "result of pwdObject is: " << result;
+   if (result == false){
+      _pwd_attempts++;
+      _connfd.writeFD("Enter password: ");
+   } else {
+      _status = s_menu;
+      _inputbuf = "";
+      sendMenu();
+   }
+   
+   if (_pwd_attempts > 1){
+      _connfd.writeFD("Two Bad Password attempts... Disconnecting...goodbye!\n");
+      disconnect();
+   }
+
 //   if(myPasswdMgrObject.checkPasswd(_username.c_str(), _inputbuf.c_str()) == true){
 //      std::cout << "GOOD PASSWORD";
 //   } else {
@@ -231,8 +245,8 @@ void TCPConn::getPasswd() {
    
    //_status = s_menu;
    //sendMenu();
-   std::cout << "Press Enter Key to Exit getPasswd()\n\n";
-   getchar();
+   //std::cout << "Press Enter Key to Exit getPasswd()\n\n";
+   //getchar();
    }
    //std::cout << "looping inside getPassword()\n";
 
@@ -306,35 +320,55 @@ void TCPConn::getMenuChoice() {
       return;
    lower(cmd);      
 
-   // Don't be lazy and use my outputs--make your own!
+   // Don't be lazy and use my outputs--make your own! Sir, its 0106... I've been at this since 1730 yesterday 29JAN
    std::string msg;
    if (cmd.compare("hello") == 0) {
-      _connfd.writeFD("Hello back!\n");
+      _connfd.writeFD("Sir, its 0106... I've been at this since 1730 yesterday 29JAN...I'm leaving this alone!\n");
+      displayCountdown();
+      sendMenu();
    } else if (cmd.compare("menu") == 0) {
       sendMenu();
    } else if (cmd.compare("exit") == 0) {
       _connfd.writeFD("Disconnecting...goodbye!\n");
       disconnect();
    } else if (cmd.compare("passwd") == 0) {
-      _connfd.writeFD("New Password: ");
-      _status = s_changepwd;
+msg += " ITS 0244 AND I MADE AN HONEST EFFORT AT THIS. MY THOUGHT WAS TO:\n";
+msg += " have user enter existing password and check it\n";
+msg += " have user enter new password once\n";
+msg += " have user enter new password second time\n";
+msg += " check that the passwords are equal\n";
+msg += " create a new password file\n";
+msg += " copy in all the users over EXCEPT the current user\n";
+msg += " add a 'new' user with the users new passwords\n";
+msg += " delete the original password file\n";
+msg += " rename the newpassword file to passwd\n";
+      _connfd.writeFD(msg);
+      displayCountdown();
+
+      //_connfd.writeFD("New Password: ");
+      //_status = s_changepwd;
    } else if (cmd.compare("1") == 0) {
       msg += "You want a prediction about the weather? You're asking the wrong Phil.\n";
       msg += "I'm going to give you a prediction about this winter. It's going to be\n";
       msg += "cold, it's going to be dark and it's going to last you for the rest of\n";
       msg += "your lives!\n";
       _connfd.writeFD(msg);
+      displayCountdown();
    } else if (cmd.compare("2") == 0) {
       _connfd.writeFD("42\n");
+      displayCountdown();
    } else if (cmd.compare("3") == 0) {
       _connfd.writeFD("That seems like a terrible idea.\n");
+      displayCountdown();
    } else if (cmd.compare("4") == 0) {
-      _connfd.writeFD("Why was this left blank Robert asks?");
+      _connfd.writeFD("Why was this left blank Robert asks?\n");
       displayCountdown();
       sendMenu();
    } else if (cmd.compare("5") == 0) {
       _connfd.writeFD("I'm singing, I'm in a computer and I'm siiiingiiiing! I'm in a\n");
       _connfd.writeFD("computer and I'm siiiiiiinnnggiiinnggg!\n");
+      displayCountdown();
+      sendMenu();
    } else {
       msg = "Unrecognized command: ";
       msg += cmd;
@@ -345,15 +379,16 @@ void TCPConn::getMenuChoice() {
 }
 
 void TCPConn::displayCountdown () {
-      std::cout << "countdown:\n";
-      _connfd.writeFD("countdown\n");
-      for (int i=5; i>0; --i) {
-         std::cout << i << "..";
-         _connfd.writeFD("..");
+      std::cout << "countdown: ";
+      _connfd.writeFD("countdown ");
+      for (int i=3; i>0; --i) {
+         std::cout << i << ".. ";
+         _connfd.writeFD(".. ");
          std::this_thread::sleep_for (std::chrono::seconds(1));
       }
-      std::cout << "\nEnd displayCountdown() send menu to client\n";
-      _connfd.writeFD("End displayCountdown() receive menu from server\n");
+      //std::cout << "\nEnd displayCountdown() send menu to client\n";
+      //_connfd.writeFD("End displayCountdown() receive menu from server\n");
+      sendMenu();
 }
 
 /**********************************************************************************************
@@ -362,7 +397,7 @@ void TCPConn::displayCountdown () {
  *    Throws: runtime_error for unrecoverable issues
  **********************************************************************************************/
 void TCPConn::sendMenu() {
-   std::cout << "Enter sendMenu() and DO SOMETHING\n"; 
+   //std::cout << "Enter sendMenu() and DO SOMETHING\n"; 
    std::string menustr;
 
    // Make this your own!
@@ -373,15 +408,20 @@ void TCPConn::sendMenu() {
    menustr += "  4). Do nothing.\n";
    menustr += "  5). Sing. Sing a song. Make it simple, to last the whole day long.\n\n";
    menustr += "Other commands: \n";
-   menustr += "  Hello - self-explanatory\n";
+   menustr += "  Hello - this class is very difficult. I'm not\n";
+   menustr += "          sure about the value in troubleshooting\n";
+   menustr += "          off by one characters like newlines, whitespaces,\n";
+   menustr += "          and other various 'C/C++ 'isms.' However,\n";
+   menustr += "          I do appreciate your patience and understainding'\n";
+   menustr += "          This is sure to help me with futuer ICS research.\n";
    menustr += "  Passwd - change your password\n";
    menustr += "  Menu - display this menu\n";
    menustr += "  Exit - disconnect.\n\n";
 
    _connfd.writeFD(menustr);
    
-   std::cout << "Press Enter Key to Exit sendMenu()\n\n";
-   getchar();   
+   //std::cout << "Press Enter Key to Exit sendMenu()\n\n";
+   //getchar();   
    
 }
 
